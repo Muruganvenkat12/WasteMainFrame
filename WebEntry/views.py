@@ -1,10 +1,13 @@
 import base64
 
+from WebEntry.main import raw_img_to_covert_processed_img
+from darknet import main
 import pymysql
 from django.shortcuts import render
 import uuid
 from django.shortcuts import render
 from django.http import Http404
+
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -18,6 +21,9 @@ import datetime
 
 
 # Create your views here.
+
+
+
 @api_view(["GET"])
 def Jsonsplit(data):
     try:
@@ -126,10 +132,10 @@ def Databasecon(data):
 @api_view(["POST"])
 def imageprocessfun(data1):
     try:
-        print('*****************=   ' + str(data1.body))
+        # print('*****************=   ' + str(data1.body))
         received_json_data = json.loads(data1.body)
-        print('*****************')
-        print("*************************" + str(received_json_data))
+        # print('*****************')
+        # print("*************************" + str(received_json_data))
         # print(str(received_json_data))
         # refid_val = received_json_data['refid']
         source_type_val = received_json_data['source_type']
@@ -178,10 +184,10 @@ def imageprocessfun(data1):
         # print(str(pincode_val))
         # print(str(on_progress_val))
         # return JsonResponse("done", safe=False)
-
+        # time.sleep(20);
         ts = time.time()
         timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-        img_raw_val = imageProcess(img_raw_val, timestamp)
+        img_raw_val = ImageConvertion(img_raw_val, timestamp)
 
         # Open database connection
         db = pymysql.connect("localhost", "root", "", "waste_mainframe_db")
@@ -212,6 +218,8 @@ def imageprocessfun(data1):
                 else:
                     refid_val = row[0] + 1
 
+            print("*** Convert Raw image to  Processed image************")
+
             cursor.execute(sql_waste_details, (
                 str(refid_val), str(waste_type_val), str(loc_type_val), str(img_raw_val),
                 str(timestamp), str(waste_char_val), str(waste_shape_val), str(waste_status_val), str(waste_fun_status),
@@ -227,6 +235,19 @@ def imageprocessfun(data1):
             # print(sql_product_details)
             # Commit your changes in the database
             db.commit()
+
+            #     Convert Raw image to  Processed image
+            # returnkey, returnprocessedImgPath = raw_img_to_covert_processed_img(str(refid_val),
+            #                                                                     "WasteRawImage" + str(img_raw_val),
+            #                                                                     "'\'WasteProcessedImage'\'")
+            returnprocessedImgPath, returnkey = raw_img_to_covert_processed_img(5,"E:/Projectcollection/DjangoProjects/WasteMainframe/WasteRawImage/a.jpg","E:\Projectcollection\DjangoProjects\WasteMainframe\WasteProcessedImage")
+            print("***returnkey=" + returnkey)
+            print("***returnprocessedImgPath=" + returnprocessedImgPath)
+
+            # update_query = "UPDATE waste_details SET img_processed_url  = %s WHERE refid  = %s"
+            # update_query_input = (returnprocessedImgPath, returnkey)
+            # cursor.execute(update_query, update_query_input)
+
         except:
             print("**************Rollback***************")
 
@@ -256,7 +277,7 @@ def imageprocessfun(data1):
             ({"statustype": "Failure", "statusmessage": "Submited data is failure", "statuscode": "400"}), safe=False)
 
 
-def imageProcess(img_base_64, timestamp):
+def ImageConvertion(img_base_64, timestamp):
     from django.core.files.base import ContentFile
     # format, imgstr = str(img_base_64).split(';base64,')
     imgstr = str(img_base_64)
