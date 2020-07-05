@@ -1,9 +1,0 @@
-[
-{
- "frame_id":1, 
- "filename":"../WasteRawImage/37299ba4-2fe7-4cd8-af8d-66a1eb3e2702.jpg", 
- "objects": [ 
-  {"class_id":41, "name":"cup", "relative_coordinates":{"center_x":0.505260, "center_y":0.587167, "width":0.275134, "height":0.589953}, "confidence":0.997594}
- ] 
-}
-]

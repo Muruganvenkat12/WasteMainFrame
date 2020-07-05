@@ -1,4 +1,5 @@
 import base64
+import os
 
 from darknet.main import raw_img_to_covert_processed_img
 from darknet import main
@@ -18,10 +19,9 @@ from django.conf import settings
 import json
 import time
 import datetime
-
+from django.conf import settings
 
 # Create your views here.
-
 
 
 @api_view(["GET"])
@@ -188,8 +188,8 @@ def imageprocessfun(data1):
         # time.sleep(20);
         ts = time.time()
         timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-        img_raw_val = ImageConvertion(img_raw_val, timestamp)
-        img_raw_val = 'WasteRawImage/ce3623a0-7a6a-467a-a2d5-491f03b7ccbf.jpg'
+        img_raw_val = ImageConversion(img_raw_val, timestamp)
+        # img_raw_val = 'WasteRawImage/ce3623a0-7a6a-467a-a2d5-491f03b7ccbf.jpg'
 
         # Open database connection
         db = pymysql.connect("localhost", "root", "", "waste_mainframe_db")
@@ -238,12 +238,11 @@ def imageprocessfun(data1):
             # Commit your changes in the database
             db.commit()
 
-
             # Convert Raw image to  Processed image
             returnkey, returnprocessedImgPath = raw_img_to_covert_processed_img(str(refid_val),
-                                                                                "../"+str(img_raw_val),
+                                                                                "../" + str(img_raw_val),
                                                                                 "../WasteProcessedImage")
-            #returnprocessedImgPath, returnkey = raw_img_to_covert_processed_img(5,"E:/Projectcollection/DjangoProjects/WasteMainframe/WasteRawImage/a.jpg","E:\Projectcollection\DjangoProjects\WasteMainframe\WasteProcessedImage")
+            # returnprocessedImgPath, returnkey = raw_img_to_covert_processed_img(5,"E:/Projectcollection/DjangoProjects/WasteMainframe/WasteRawImage/a.jpg","E:\Projectcollection\DjangoProjects\WasteMainframe\WasteProcessedImage")
             print("***returnkey=" + returnkey)
             print("***returnprocessedImgPath=" + returnprocessedImgPath)
 
@@ -270,7 +269,6 @@ def imageprocessfun(data1):
         db.close()
 
         # return JsonResponse("done", safe=False)
-        ##@@##
         return JsonResponse(({"statustype": "Success", "statusmessage": "Submited Successfull", "statuscode": "200"}),
                             safe=False)
     except ValueError as e:
@@ -283,16 +281,24 @@ def imageprocessfun(data1):
             ({"statustype": "Failure", "statusmessage": "Submited data is failure", "statuscode": "400"}), safe=False)
 
 
-def ImageConvertion(img_base_64, timestamp):
+def ImageConversion(img_base_64, timestamp):
     from django.core.files.base import ContentFile
     # format, imgstr = str(img_base_64).split(';base64,')
-    imgstr = str(img_base_64)
     # ext = format.split('/')[-1]
-    data = ContentFile(base64.b64decode(imgstr), 'temp.')  # You can save this as file instance.
+    # data = ContentFile(base64.b64decode(imgstr), 'temp.')  # You can save this as file instance. uuid.uuid4()
+
+    # print(imgdata)
+    # name = str(uuid.uuid4()) + '.jpg'
+    os.chdir(settings.BASE_DIR)
+    imgstr = str(img_base_64)
+    imgdata = base64.b64decode(imgstr)
     path = 'WasteRawImage/' + str(uuid.uuid4()) + '.jpg'
-    print(path)
-    with open(path, "wb") as fh:
-        fh.write(base64.b64decode(imgstr))
+    print("@@@@ PATH", path)
+    # base_dir=settings.BASE_DIR
+    # print("#### BASE_DIR", base_dir)
+    with open(path, "wb+") as fh:
+        fh.write(imgdata)
+    fh.close()
     return path
 
 # def openSource():
