@@ -1,0 +1,1 @@
+WasteMainframe/darknet.exe detector test cfg/coco.data cfg/yolov3.cfg yolov3.weights E:/Projectcollection/DjangoProjects/WasteMainframe/WasteRawImage/a.jpg -out E:\Projectcollection\DjangoProjects\WasteMainframe\WasteProcessedImage/263030be-bdfb-11ea-9772-e86a64730610

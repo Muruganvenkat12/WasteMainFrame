@@ -1,0 +1,6 @@
+/venu
+__pycache__
+*.idea
+*.sqlite3
+darknet_train/
+darknet/

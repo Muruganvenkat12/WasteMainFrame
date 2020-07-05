@@ -1,6 +1,6 @@
 import base64
 
-from WebEntry.main import raw_img_to_covert_processed_img
+from darknet.main import raw_img_to_covert_processed_img
 from darknet import main
 import pymysql
 from django.shortcuts import render
@@ -131,6 +131,7 @@ def Databasecon(data):
 
 @api_view(["POST"])
 def imageprocessfun(data1):
+    print("***********************")
     try:
         # print('*****************=   ' + str(data1.body))
         received_json_data = json.loads(data1.body)
@@ -188,6 +189,7 @@ def imageprocessfun(data1):
         ts = time.time()
         timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
         img_raw_val = ImageConvertion(img_raw_val, timestamp)
+        img_raw_val = 'WasteRawImage/ce3623a0-7a6a-467a-a2d5-491f03b7ccbf.jpg'
 
         # Open database connection
         db = pymysql.connect("localhost", "root", "", "waste_mainframe_db")
@@ -236,17 +238,20 @@ def imageprocessfun(data1):
             # Commit your changes in the database
             db.commit()
 
-            #     Convert Raw image to  Processed image
-            # returnkey, returnprocessedImgPath = raw_img_to_covert_processed_img(str(refid_val),
-            #                                                                     "WasteRawImage" + str(img_raw_val),
-            #                                                                     "'\'WasteProcessedImage'\'")
-            returnprocessedImgPath, returnkey = raw_img_to_covert_processed_img(5,"E:/Projectcollection/DjangoProjects/WasteMainframe/WasteRawImage/a.jpg","E:\Projectcollection\DjangoProjects\WasteMainframe\WasteProcessedImage")
+
+            # Convert Raw image to  Processed image
+            returnkey, returnprocessedImgPath = raw_img_to_covert_processed_img(str(refid_val),
+                                                                                "../"+str(img_raw_val),
+                                                                                "../WasteProcessedImage")
+            #returnprocessedImgPath, returnkey = raw_img_to_covert_processed_img(5,"E:/Projectcollection/DjangoProjects/WasteMainframe/WasteRawImage/a.jpg","E:\Projectcollection\DjangoProjects\WasteMainframe\WasteProcessedImage")
             print("***returnkey=" + returnkey)
             print("***returnprocessedImgPath=" + returnprocessedImgPath)
 
-            # update_query = "UPDATE waste_details SET img_processed_url  = %s WHERE refid  = %s"
-            # update_query_input = (returnprocessedImgPath, returnkey)
-            # cursor.execute(update_query, update_query_input)
+            update_query = "UPDATE waste_details SET img_processed_url  = %s WHERE refid  = %s"
+            update_query_input = (returnprocessedImgPath, returnkey)
+            cursor.execute(update_query, update_query_input)
+
+            db.commit()
 
         except:
             print("**************Rollback***************")
@@ -265,6 +270,7 @@ def imageprocessfun(data1):
         db.close()
 
         # return JsonResponse("done", safe=False)
+        ##@@##
         return JsonResponse(({"statustype": "Success", "statusmessage": "Submited Successfull", "statuscode": "200"}),
                             safe=False)
     except ValueError as e:
@@ -284,7 +290,7 @@ def ImageConvertion(img_base_64, timestamp):
     # ext = format.split('/')[-1]
     data = ContentFile(base64.b64decode(imgstr), 'temp.')  # You can save this as file instance.
     path = 'WasteRawImage/' + str(uuid.uuid4()) + '.jpg'
-    # print(path)
+    print(path)
     with open(path, "wb") as fh:
         fh.write(base64.b64decode(imgstr))
     return path
