@@ -1,7 +1,19 @@
 <component name="ProjectDictionaryState">
   <dictionary name="murug">
     <words>
+      <w>imageprocess</w>
+      <w>imgdata</w>
+      <w>imgstr</w>
+      <w>pincode</w>
       <w>projectcollection</w>
+      <w>refid</w>
+      <w>returnkey</w>
+      <w>returnprocessed</w>
+      <w>statuscode</w>
+      <w>statusmessage</w>
+      <w>statustype</w>
+      <w>submited</w>
+      <w>successfull</w>
     </words>
   </dictionary>
 </component>

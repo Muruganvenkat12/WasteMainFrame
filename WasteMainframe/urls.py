@@ -22,5 +22,5 @@ from django.contrib import admin
 from WebEntry import views
 urlpatterns = [
     # url(r'^admin/', admin.site.urls),
-    url('imageprocessfun', views.imageprocessfun),
+    url('imageprocess', views.imageprocess),
 ]
