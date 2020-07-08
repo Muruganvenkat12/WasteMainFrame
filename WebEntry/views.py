@@ -1,21 +1,10 @@
 import base64
 import os
-
 from darknet.main import raw_img_to_covert_processed_img
-from darknet import main
 import pymysql
-from django.shortcuts import render
 import uuid
-from django.shortcuts import render
-from django.http import Http404
-
-from rest_framework.views import APIView
 from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import status
 from django.http import JsonResponse
-from django.core import serializers
-from django.conf import settings
 import json
 import time
 import datetime
@@ -29,6 +18,7 @@ def imageprocess(data1):
     try:
         # Loading JSON data into the variable "received_json_data"
         received_json_data = json.loads(data1.body)
+
         source_type_val = received_json_data['source_type']
         waste_type_val = received_json_data['waste_type']
         loc_type_val = received_json_data['loc_type']
@@ -109,8 +99,6 @@ def imageprocess(data1):
                     refid_val = 1
                 else:
                     refid_val = row[0] + 1
-
-            # print("*** Convert Raw image to  Processed image************")
 
             # QUERY EXECUTION
             cursor.execute(sql_waste_details, (

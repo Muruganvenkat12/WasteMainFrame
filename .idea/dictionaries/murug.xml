@@ -1,9 +1,12 @@
 <component name="ProjectDictionaryState">
   <dictionary name="murug">
     <words>
+      <w>darknet</w>
+      <w>fucntion</w>
       <w>imageprocess</w>
       <w>imgdata</w>
       <w>imgstr</w>
+      <w>imshow</w>
       <w>pincode</w>
       <w>projectcollection</w>
       <w>refid</w>
@@ -14,6 +17,7 @@
       <w>statustype</w>
       <w>submited</w>
       <w>successfull</w>
+      <w>yolov</w>
     </words>
   </dictionary>
 </component>
