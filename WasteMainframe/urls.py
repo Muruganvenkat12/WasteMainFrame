@@ -22,4 +22,5 @@ from django.contrib import admin
 from WebEntry import views
 urlpatterns = [
     url('imageprocess', views.imageprocess),
+    url('opensource', views.opensoure),
 ]

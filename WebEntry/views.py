@@ -9,15 +9,16 @@ import json
 import time
 import datetime
 from django.conf import settings
-
+import MySQLdb as my
+import mariadb
 
 # Create your views here.
 
 @api_view(["POST"])
-def imageprocess(data1):
+def imageprocess(data):
     try:
         # Loading JSON data into the variable "received_json_data"
-        received_json_data = json.loads(data1.body)
+        received_json_data = json.loads(data.body)
 
         source_type_val = received_json_data['source_type']
         waste_type_val = received_json_data['waste_type']
@@ -67,6 +68,7 @@ def imageprocess(data1):
         # GETTING THE CURRENT TIME USING THE FUNCTION "time()"
         ts = time.time()
         timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+        # print("#############TIMESTAMP",timestamp)
         img_raw_val = ImageConversion(img_raw_val, timestamp)
 
         # ESTABLISHING DATABASE CONNECTION
@@ -166,7 +168,8 @@ def ImageConversion(img_base_64, timestamp):
     fh.close()
     return path
 
-# def openSource():
+
+# def openSource(data):
 #     try:
 #         print(str(json.loads(data.body)['refid']))
 #
@@ -215,3 +218,100 @@ def ImageConversion(img_base_64, timestamp):
 #         return JsonResponse(sql, safe=False)
 #     except ValueError as e:
 #         return Response(e.args[0], status.HTTP_400_BAD_REQUEST)
+
+@api_view(["POST"])
+def opensoure(data):
+    try:
+        reseived_json_data = json.loads(data.body)
+
+        from_time_and_date = reseived_json_data['from']
+        to_time_and_date = reseived_json_data['to']
+        # print("##@@@@##", from_time_and_date)
+        # print("##****##", to_time_and_date)
+        # print("#########################")
+        db = pymysql.connect("localhost", "root", "", "waste_mainframe_db")
+
+        cursor = db.cursor()
+
+        # sql1 = "SELECT * FROM waste_details WHERE time_date between '2020-07-05 18:37:59' and '2020-07-05 19:31:28'"
+        sql1 = "SELECT * FROM waste_details WHERE time_date between %s and %s"
+        sql2 = "SELECT * FROM waste_location_details WHERE refid = %s"
+        sql3 = "SELECT * FROM waste_product_details WHERE refid = %s"
+
+        # sqlSample= "SELECT refid as refidtemp, * FROM waste_details WHERE time_date between %s and %s"
+        try:
+            # print("!!!!!!!!!!!!!!!!!!!!!!")
+            # cursor.execute(sql1)
+            cursor.execute(sql1, (str(from_time_and_date), str(to_time_and_date)))
+            waste_details = cursor.fetchall()
+
+            final_lst = []
+            final_dic = {}
+            waste_details_lst = ["refid", "waste_type", "loc_type", "img_raw_url", "img_processed_url", "time_date",
+                                 "waste_char", "waste_shape", "waste_status", "waste_fun_status", "source_type",
+                                 "on_progress"]
+            waste_location_details_lst = ["refid", "latitude", "longitude", "country", "state", "district", "region",
+                                          "city", "street", "pincode"]
+            waste_product_details_lst = ["refid", "waste_prod_name", "waste_prod_address", "other"]
+            for x in waste_details:
+                refid = x[0]
+
+                cursor.execute(sql2, refid)
+                waste_location_details = cursor.fetchall()
+
+                cursor.execute(sql3, refid)
+                waste_product_details = cursor.fetchall()
+
+                x = list(x)
+                waste_location_details = list(waste_location_details)
+                waste_product_details = list(waste_product_details)
+
+                # waste_location_details.pop(0)
+                # waste_product_details.pop(0)
+
+                # print("waste1", type(x))
+                for y in range(len(x)):
+                    # print(x[y])
+                    # print(waste_details_lst[y])
+                    final_dic[waste_details_lst[y]] = x[y]
+                # print(final_dic)
+
+                # print("waste2", type(waste_location_details))
+                # print("$$$$$", waste_location_details)
+                for y in waste_location_details:
+                    for i in range(len(y)):
+                        final_dic[waste_location_details_lst[i]] = y[i]
+                # print(final_dic)
+
+                # print("waste3", type(waste_product_details))
+                # print("$$$$$", waste_product_details)
+                for y in waste_product_details:
+                    for i in range(len(y)):
+                        final_dic[waste_product_details_lst[i]] = y[i]
+                # print("####################################################")
+                # print(final_dic)
+                # print("##################################################################")
+                final_lst.append(final_dic.copy())
+                # _lst)
+        except my.Error as e:
+            print(e)
+            # Rollback in case there is any error
+            print("**************Rollback***************")
+            db.rollback()
+
+            # execute SQL query using execute() method.
+            cursor.execute("SELECT VERSION()")
+
+            # Fetch a single row using fetchone() method.
+            data = cursor.fetchone()
+            print("Database version : %s " % data)
+
+            # DISCONNECT DATABASE CONNECTION
+            db.close()
+        return JsonResponse(
+            ({"statustype": "Success", "Data": final_lst, "statusmessage": "Submited Successfull", "statuscode": "200"}),
+            safe=False)
+    except ValueError as e:
+        print(str(e))
+        return JsonResponse(
+            ({"statustype": "Failure", "statusmessage": "Submited data is failure", "statuscode": "400"}), safe=False)
