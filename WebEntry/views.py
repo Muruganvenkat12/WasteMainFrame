@@ -10,7 +10,7 @@ import time
 import datetime
 from django.conf import settings
 import MySQLdb as my
-import mariadb
+
 
 # Create your views here.
 
@@ -20,6 +20,7 @@ def imageprocess(data):
         # Loading JSON data into the variable "received_json_data"
         received_json_data = json.loads(data.body)
 
+        # Parsing JSON data
         source_type_val = received_json_data['source_type']
         waste_type_val = received_json_data['waste_type']
         loc_type_val = received_json_data['loc_type']
@@ -41,40 +42,17 @@ def imageprocess(data):
         pincode_val = received_json_data['pincode']
         waste_fun_status = 1
 
-        # PRINTING THE EXTRACTED DATA
-        # print(str(source_type_val))
-        # print(str(waste_type_val))
-        # print(str(loc_type_val))
-        # print(str(img_raw_val))
-        # print(str(img_processed_val))
-        # print(str(time_date_val))
-        # print(str(waste_char_val))
-        # print(str(waste_shape_val))
-        # print(str(waste_status_val))
-        # print(str(waste_prod_name_val))
-        # print(str(waste_prod_address_val))
-        # print(str(other_val))
-        # print(str(latitude_val))
-        # print(str(longitude_val))
-        # print(str(country_val))
-        # print(str(state_val))
-        # print(str(district_val))
-        # print(str(region_val))
-        # print(str(city_val))
-        # print(str(street_val))
-        # print(str(pincode_val))
-        # print(str(on_progress_val))
-
         # GETTING THE CURRENT TIME USING THE FUNCTION "time()"
         ts = time.time()
         timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-        # print("#############TIMESTAMP",timestamp)
+
+        # Passing raw image to image conversion function
         img_raw_val = ImageConversion(img_raw_val, timestamp)
 
         # ESTABLISHING DATABASE CONNECTION
         db = pymysql.connect("localhost", "root", "", "waste_mainframe_db")
 
-        # prepare a cursor object using cursor() method
+        # Prepare a cursor object using cursor() method
         cursor = db.cursor()
 
         # QUERY
@@ -135,7 +113,7 @@ def imageprocess(data):
             print("**************Rollback***************")
             db.rollback()
 
-        # execute SQL query using execute() method.
+        # Execute SQL query using execute() method.
         cursor.execute("SELECT VERSION()")
 
         # Fetch a single row using fetchone() method.
@@ -169,137 +147,60 @@ def ImageConversion(img_base_64, timestamp):
     return path
 
 
-# def openSource(data):
-#     try:
-#         print(str(json.loads(data.body)['refid']))
-#
-#         # Open database connection
-#         db = pymysql.connect("localhost", "root", "", "waste_mainframe_db")
-#
-#         # prepare a cursor object using cursor() method
-#         cursor = db.cursor()
-#         #         sql = """INSERT INTO EMPLOYEE(refid,
-#         # waste_type,
-#         # loc_type,
-#         # img_raw_url,
-#         # img_processed_url,
-#         # time_date,
-#         # waste_char,
-#         # waste_shape,
-#         # waste_status,
-#         # )VALUES (1,1,2,'L3yetLycKOvehsluDinJ8u40AOX26Dim7fvU','L3yetLycKOvehsluDinJ8u40AOX26Dim7fvU',
-#         # 2019-05-08 15:19:23,2,5,35,3)"""
-#         received_json_data = "'{}'".format(str(json.loads(data.body)['refid']))
-#
-#         sql = """INSERT INTO testnew(number)VALUES (%s)"""
-#         print(sql)
-#         try:
-#             # Execute the SQL command
-#             cursor.execute(sql, str(json.loads(data.body)['refid']))
-#             print(sql)
-#             # Commit your changes in the database
-#             db.commit()
-#         except:
-#             print("**************Rollback***************")
-#
-#             # Rollback in case there is any error
-#             db.rollback()
-#
-#         # execute SQL query using execute() method.
-#         cursor.execute("SELECT VERSION()")
-#
-#         # Fetch a single row using fetchone() method.
-#         data = cursor.fetchone()
-#         print("Database version : %s " % data)
-#
-#         # disconnect from server
-#         db.close()
-#
-#         return JsonResponse(sql, safe=False)
-#     except ValueError as e:
-#         return Response(e.args[0], status.HTTP_400_BAD_REQUEST)
-
 @api_view(["POST"])
-def opensoure(data):
+def getwastedetails(data):
     try:
+        # Loading JSON data into the variable "received_json_data"
         reseived_json_data = json.loads(data.body)
 
         from_time_and_date = reseived_json_data['from']
         to_time_and_date = reseived_json_data['to']
-        # print("##@@@@##", from_time_and_date)
-        # print("##****##", to_time_and_date)
-        # print("#########################")
+
+        # ESTABLISHING DATABASE CONNECTION
         db = pymysql.connect("localhost", "root", "", "waste_mainframe_db")
 
+        # Prepare a cursor object using cursor() method
         cursor = db.cursor()
 
-        # sql1 = "SELECT * FROM waste_details WHERE time_date between '2020-07-05 18:37:59' and '2020-07-05 19:31:28'"
-        sql1 = "SELECT * FROM waste_details WHERE time_date between %s and %s"
-        sql2 = "SELECT * FROM waste_location_details WHERE refid = %s"
-        sql3 = "SELECT * FROM waste_product_details WHERE refid = %s"
+        # QUERY
+        sql = "SELECT waste_details.refid, waste_details.waste_type,waste_details.loc_type,waste_details.img_raw_url," \
+              "waste_details.img_processed_url,waste_details.time_date,waste_details.waste_char,waste_details.waste_shape," \
+              "waste_details.waste_status,waste_details.waste_fun_status,waste_details.source_type,waste_details.on_progress," \
+              "waste_location_details.latitude,waste_location_details.longitude,waste_location_details.country,	waste_location_details.state," \
+              "waste_location_details.district,	waste_location_details.region,	waste_location_details.city,waste_location_details.street," \
+              "waste_location_details.pincode,	waste_product_details.waste_prod_name," \
+              "waste_product_details.waste_prod_address,waste_product_details.other " \
+              "FROM waste_details INNER JOIN waste_location_details ON waste_details.refid = waste_location_details.refid " \
+              "INNER JOIN waste_product_details ON waste_location_details.refid = waste_product_details.refid " \
+              "WHERE waste_details.time_date between %s and %s;"
 
-        # sqlSample= "SELECT refid as refidtemp, * FROM waste_details WHERE time_date between %s and %s"
         try:
-            # print("!!!!!!!!!!!!!!!!!!!!!!")
-            # cursor.execute(sql1)
-            cursor.execute(sql1, (str(from_time_and_date), str(to_time_and_date)))
+            # QUERY EXECUTION
+            cursor.execute(sql, (str(from_time_and_date), str(to_time_and_date)))
             waste_details = cursor.fetchall()
 
             final_lst = []
             final_dic = {}
-            waste_details_lst = ["refid", "waste_type", "loc_type", "img_raw_url", "img_processed_url", "time_date",
-                                 "waste_char", "waste_shape", "waste_status", "waste_fun_status", "source_type",
-                                 "on_progress"]
-            waste_location_details_lst = ["refid", "latitude", "longitude", "country", "state", "district", "region",
-                                          "city", "street", "pincode"]
-            waste_product_details_lst = ["refid", "waste_prod_name", "waste_prod_address", "other"]
+
+            # Storing attributes of a table in a list
+            waste_lst = ["refid", "waste_type", "loc_type", "img_raw_url", "img_processed_url", "time_date",
+                         "waste_char", "waste_shape", "waste_status", "waste_fun_status", "source_type",
+                         "on_progress", "latitude", "longitude", "country", "state", "district", "region",
+                         "city", "street", "pincode", "waste_prod_name", "waste_prod_address", "other"]
+
+            # Iterating through the data and storing it to the dictionary and appending the dictionary to the list
             for x in waste_details:
-                refid = x[0]
-
-                cursor.execute(sql2, refid)
-                waste_location_details = cursor.fetchall()
-
-                cursor.execute(sql3, refid)
-                waste_product_details = cursor.fetchall()
-
-                x = list(x)
-                waste_location_details = list(waste_location_details)
-                waste_product_details = list(waste_product_details)
-
-                # waste_location_details.pop(0)
-                # waste_product_details.pop(0)
-
-                # print("waste1", type(x))
                 for y in range(len(x)):
-                    # print(x[y])
-                    # print(waste_details_lst[y])
-                    final_dic[waste_details_lst[y]] = x[y]
-                # print(final_dic)
-
-                # print("waste2", type(waste_location_details))
-                # print("$$$$$", waste_location_details)
-                for y in waste_location_details:
-                    for i in range(len(y)):
-                        final_dic[waste_location_details_lst[i]] = y[i]
-                # print(final_dic)
-
-                # print("waste3", type(waste_product_details))
-                # print("$$$$$", waste_product_details)
-                for y in waste_product_details:
-                    for i in range(len(y)):
-                        final_dic[waste_product_details_lst[i]] = y[i]
-                # print("####################################################")
-                # print(final_dic)
-                # print("##################################################################")
+                    final_dic[waste_lst[y]] = x[y]
                 final_lst.append(final_dic.copy())
-                # _lst)
+
         except my.Error as e:
             print(e)
             # Rollback in case there is any error
             print("**************Rollback***************")
             db.rollback()
 
-            # execute SQL query using execute() method.
+            # Execute SQL query using execute() method.
             cursor.execute("SELECT VERSION()")
 
             # Fetch a single row using fetchone() method.
@@ -309,7 +210,9 @@ def opensoure(data):
             # DISCONNECT DATABASE CONNECTION
             db.close()
         return JsonResponse(
-            ({"statustype": "Success", "Data": final_lst, "statusmessage": "Submited Successfull", "statuscode": "200"}),
+            (
+                {"statustype": "Success", "Data": final_lst, "statusmessage": "Submited Successfull",
+                 "statuscode": "200"}),
             safe=False)
     except ValueError as e:
         print(str(e))
